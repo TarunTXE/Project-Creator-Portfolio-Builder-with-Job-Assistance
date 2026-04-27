@@ -44,6 +44,10 @@ const portfolioSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    githubLink: {
+      type: String,
+      required: false,
+    },
     profileImage: {
       type: String, // Base64 or local path
       required: false,
@@ -51,6 +55,11 @@ const portfolioSchema = mongoose.Schema(
     skills: [skillSchema],
     projects: [projectSchema],
     education: [educationSchema],
+    experience: [{
+      title: { type: String, required: true },
+      company: { type: String, required: true },
+      description: { type: String, required: false },
+    }],
     customizations: {
       primaryColor: { type: String, default: '#3b82f6' },
       fontFamily: { type: String, default: 'sans-serif' },
@@ -58,6 +67,7 @@ const portfolioSchema = mongoose.Schema(
       showSkills: { type: Boolean, default: true },
       showProjects: { type: Boolean, default: true },
       showEducation: { type: Boolean, default: true },
+      showExperience: { type: Boolean, default: true },
       showContact: { type: Boolean, default: true },
     },
   },

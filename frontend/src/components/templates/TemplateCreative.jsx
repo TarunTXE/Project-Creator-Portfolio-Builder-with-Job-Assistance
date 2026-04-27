@@ -1,10 +1,10 @@
 /**
  * TemplateCreative – Colorful sections, unique angled layout.
  */
-const TemplateCreative = ({ portfolio }) => {
+const TemplateCreative = ({ portfolio, theme }) => {
   const p = portfolio;
   const c = p.customizations || {};
-  const primaryColor = c.primaryColor || '#ec4899'; // default pink
+  const primaryColor = theme?.primary || c.primaryColor || '#ec4899'; // default pink
   const fontFamily = c.fontFamily || 'cursive, sans-serif';
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
@@ -99,7 +99,27 @@ const TemplateCreative = ({ portfolio }) => {
                   <div style={{ flex: '2 1 300px', padding: '1rem' }}>
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#111827' }}>{proj.title}</h3>
                     <p style={{ color: '#4b5563', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>{proj.description}</p>
+                    {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
                   </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Experience */}
+        {c.showExperience !== false && p.experience?.length > 0 && (
+          <section style={{ marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: primaryColor, marginBottom: '1.5rem', display: 'inline-block', position: 'relative' }}>
+              Academia
+              <span style={{ position: 'absolute', bottom: '2px', left: 0, width: '100%', height: '8px', background: `${primaryColor}40`, zIndex: -1 }}></span>
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {p.experience.map((exp, i) => (
+                <div key={i} style={{ borderLeft: `4px solid ${primaryColor}`, paddingLeft: '1.5rem', position: 'relative' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: primaryColor, position: 'absolute', left: '-8px', top: '5px' }}></div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem', color: '#111827' }}>{exp.title || exp.text}</h3>
+                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{exp.company} <span style={{ opacity: 0.5 }}>• {exp.years?.length > 0 ? exp.years.join(", ") : ""}</span></p>
                 </div>
               ))}
             </div>
@@ -117,8 +137,8 @@ const TemplateCreative = ({ portfolio }) => {
               {p.education.map((ed, i) => (
                 <div key={i} style={{ borderLeft: `4px solid ${primaryColor}`, paddingLeft: '1.5rem', position: 'relative' }}>
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: primaryColor, position: 'absolute', left: '-8px', top: '5px' }}></div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem', color: '#111827' }}>{ed.degree}</h3>
-                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{ed.institution} <span style={{ opacity: 0.5 }}>• {ed.year}</span></p>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem', color: '#111827' }}>{ed.degree || ed.text}</h3>
+                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{ed.institution} <span style={{ opacity: 0.5 }}>• {ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span></p>
                 </div>
               ))}
             </div>

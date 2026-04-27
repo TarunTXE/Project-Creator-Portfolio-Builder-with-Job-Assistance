@@ -2,10 +2,10 @@
  * TemplateModern – A vibrant, gradient-heavy modern portfolio layout.
  * Supports customizations and a card-based aesthetic.
  */
-const TemplateModern = ({ portfolio }) => {
+const TemplateModern = ({ portfolio, theme }) => {
   const p = portfolio;
   const c = p.customizations || {};
-  const primaryColor = c.primaryColor || '#3b82f6';
+  const primaryColor = theme?.primary || c.primaryColor || '#3b82f6';
   const fontFamily = c.fontFamily || 'sans-serif';
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
@@ -52,10 +52,11 @@ const TemplateModern = ({ portfolio }) => {
         </p>
         
         {/* Contact info inside Hero if Sidebar */}
-        {(isSidebar || isSidebarRight) && c.showContact !== false && (p.contactEmail || p.contactPhone) && (
+        {(isSidebar || isSidebarRight) && c.showContact !== false && (p.contactEmail || p.contactPhone || p.githubLink) && (
           <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '2rem' }}>
              {p.contactEmail && <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>📧 {p.contactEmail}</p>}
              {p.contactPhone && <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>📱 {p.contactPhone}</p>}
+             {p.githubLink && <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>🔗 <a href={p.githubLink.startsWith('http') ? p.githubLink : `https://${p.githubLink}`} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>GitHub</a></p>}
           </div>
         )}
       </div>
@@ -88,7 +89,27 @@ const TemplateModern = ({ portfolio }) => {
                   <div style={{ padding: '1.25rem' }}>
                     <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.1rem' }}>{proj.title}</h3>
                     <p style={{ color: '#475569', fontSize: '0.9rem', marginTop: '0.5rem', lineHeight: 1.5 }}>{proj.description}</p>
+                    {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
                   </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Experience */}
+        {c.showExperience !== false && p.experience?.length > 0 && (
+          <section style={{ marginBottom: '2.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.25rem', color: primaryColor, borderBottom: `2px solid ${primaryColor}33`, paddingBottom: '0.5rem' }}>Experience</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {p.experience.map((exp, i) => (
+                <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.1rem' }}>{exp.title || exp.text}</h3>
+                    <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>{exp.company}</p>
+                    {exp.description && <div style={{ marginTop: "0.5rem", fontSize: "0.95em", opacity: 0.85, whiteSpace: "pre-wrap" }}>{exp.description}</div>}
+                  </div>
+                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
                 </div>
               ))}
             </div>
@@ -103,10 +124,10 @@ const TemplateModern = ({ portfolio }) => {
               {p.education.map((ed, i) => (
                 <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.1rem' }}>{ed.degree}</h3>
+                    <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.1rem' }}>{ed.degree || ed.text}</h3>
                     <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>{ed.institution}</p>
                   </div>
-                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{ed.year}</span>
+                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
                 </div>
               ))}
             </div>
@@ -114,12 +135,13 @@ const TemplateModern = ({ portfolio }) => {
         )}
 
         {/* Contact (Top Layout) */}
-        {(!isSidebar && !isSidebarRight) && c.showContact !== false && (p.contactEmail || p.contactPhone) && (
+        {(!isSidebar && !isSidebarRight) && c.showContact !== false && (p.contactEmail || p.contactPhone || p.githubLink) && (
           <section style={{ textAlign: 'center', paddingTop: '2rem', marginTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', color: primaryColor }}>Contact</h2>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
               {p.contactEmail && <p style={{ color: '#475569', margin: 0, fontSize: '1rem', fontWeight: 500 }}>📧 {p.contactEmail}</p>}
               {p.contactPhone && <p style={{ color: '#475569', margin: 0, fontSize: '1rem', fontWeight: 500 }}>📱 {p.contactPhone}</p>}
+              {p.githubLink && <p style={{ color: '#475569', margin: 0, fontSize: '1rem', fontWeight: 500 }}>🔗 <a href={p.githubLink.startsWith('http') ? p.githubLink : `https://${p.githubLink}`} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>GitHub</a></p>}
             </div>
           </section>
         )}

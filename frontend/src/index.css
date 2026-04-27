@@ -9,40 +9,39 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9; /* slate-100 */
+  background: #f9fafb; /* gray-50 */
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
-  border-radius: 4px;
+  background: #d1d5db; /* gray-300 */
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
+  background: #9ca3af; /* gray-400 */
 }
 
-/* Gradient text helper */
+/* Gradient text helper — indigo to violet */
 .gradient-text {
-  background: linear-gradient(135deg, #2563eb, #3b82f6); /* blue-600 to blue-500 */
+  background: linear-gradient(135deg, #6366f1, #8b5cf6); /* indigo-500 to violet-500 */
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Clean card effect (replaces old glass effect) */
+/* Clean card effect */
 .glass {
   background: #ffffff;
-  border: 1px solid #e2e8f0; /* slate-200 */
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid #f3f4f6; /* gray-100 */
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
 }
 
 /* Soft pulse animation for buttons (refined glow) */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-  50% { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.1); }
 }
 .btn-glow:hover {
   animation: pulse-glow 1.5s infinite;
 }
-

@@ -1,10 +1,10 @@
 /**
  * TemplateDeveloper – GitHub/IDE style dark theme.
  */
-const TemplateDeveloper = ({ portfolio }) => {
+const TemplateDeveloper = ({ portfolio, theme }) => {
   const p = portfolio;
   const c = p.customizations || {};
-  const primaryColor = c.primaryColor || '#10b981'; // Default emerald
+  const primaryColor = theme?.primary || c.primaryColor || '#10b981'; // Default emerald
   const fontFamily = c.fontFamily || 'monospace';
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
@@ -58,7 +58,7 @@ const TemplateDeveloper = ({ portfolio }) => {
             {p.bio || 'Full-stack developer building open source.'}
           </p>
 
-          {c.showContact !== false && (p.contactEmail || p.contactPhone) && (
+          {c.showContact !== false && (p.contactEmail || p.contactPhone || p.githubLink) && (
             <div style={{ borderTop: '1px solid #30363d', paddingTop: '1rem', fontSize: '0.9rem' }}>
               {p.contactEmail && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: '#c9d1d9' }}>
@@ -66,8 +66,13 @@ const TemplateDeveloper = ({ portfolio }) => {
                 </div>
               )}
               {p.contactPhone && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c9d1d9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: p.githubLink ? '0.5rem' : '0', color: '#c9d1d9' }}>
                   <span style={{ color: '#8b949e' }}>✆</span> {p.contactPhone}
+                </div>
+              )}
+              {p.githubLink && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c9d1d9' }}>
+                  <span style={{ color: '#8b949e' }}>🔗</span> <a href={p.githubLink.startsWith('http') ? p.githubLink : `https://${p.githubLink}`} target="_blank" rel="noopener noreferrer" style={{ color: '#58a6ff', textDecoration: 'none' }}>GitHub</a>
                 </div>
               )}
             </div>
@@ -110,6 +115,7 @@ const TemplateDeveloper = ({ portfolio }) => {
                          <img src={proj.imageUrl} alt={proj.title} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px', marginBottom: '0.5rem', border: '1px solid #30363d' }} />
                     )}
                     <p style={{ color: '#8b949e', fontSize: '0.8rem', lineHeight: 1.5, margin: 0 }}>{proj.description}</p>
+                    {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
                   </div>
                 ))}
               </div>
@@ -128,8 +134,8 @@ const TemplateDeveloper = ({ portfolio }) => {
                 {p.education.map((ed, i) => (
                   <div key={i} style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '-1.35rem', top: '0.25rem', width: '10px', height: '10px', background: primaryColor, borderRadius: '50%', border: '2px solid #0d1117' }}></div>
-                    <span style={{ fontSize: '0.8rem', color: '#8b949e', marginBottom: '0.25rem', display: 'block' }}>{ed.year}</span>
-                    <h3 style={{ fontSize: '1rem', color: '#c9d1d9', margin: '0 0 0.25rem' }}>{ed.degree}</h3>
+                    <span style={{ fontSize: '0.8rem', color: '#8b949e', marginBottom: '0.25rem', display: 'block' }}>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
+                    <h3 style={{ fontSize: '1rem', color: '#c9d1d9', margin: '0 0 0.25rem' }}>{ed.degree || ed.text}</h3>
                     <p style={{ color: '#8b949e', fontSize: '0.9rem', margin: 0 }}>{ed.institution}</p>
                   </div>
                 ))}

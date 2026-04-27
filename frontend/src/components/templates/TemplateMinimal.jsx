@@ -1,10 +1,10 @@
 /**
  * TemplateMinimal – Clean, simple, lots of whitespace.
  */
-const TemplateMinimal = ({ portfolio }) => {
+const TemplateMinimal = ({ portfolio, theme }) => {
   const p = portfolio;
   const c = p.customizations || {};
-  const primaryColor = c.primaryColor || '#171717'; // default almost black
+  const primaryColor = theme?.primary || c.primaryColor || '#475569'; // default slate
   const fontFamily = c.fontFamily || 'serif';
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
@@ -66,6 +66,7 @@ const TemplateMinimal = ({ portfolio }) => {
                     <div>
                       <h3 style={{ fontSize: '1.5rem', fontWeight: 400, margin: '0 0 0.5rem', color: primaryColor }}>{proj.title}</h3>
                       <p style={{ color: '#525252', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>{proj.description}</p>
+                    {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
                     </div>
                   </div>
                 ))}
@@ -87,6 +88,26 @@ const TemplateMinimal = ({ portfolio }) => {
             </section>
           )}
 
+          {/* Experience */}
+          {c.showExperience !== false && p.experience?.length > 0 && (
+            <section style={{ marginBottom: '4rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 400, color: '#a3a3a3', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Experience</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {p.experience.map((exp, i) => (
+                  <div key={i}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 500, margin: '0 0 0.25rem', color: primaryColor }}>{exp.title || exp.text}</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#737373', fontSize: '0.95rem' }}>
+                      <span>{exp.company}</span>
+                    {exp.description && <div style={{ marginTop: "0.5rem", fontSize: "0.95em", opacity: 0.85, whiteSpace: "pre-wrap" }}>{exp.description}</div>}
+                      <span>{exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
+                      {exp.description && <p style={{ fontSize: "0.9em", marginTop: "0.5rem", opacity: 0.9 }}>{exp.description}</p>}
+                </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Education */}
           {c.showEducation !== false && p.education?.length > 0 && (
             <section style={{ marginBottom: '4rem' }}>
@@ -94,10 +115,10 @@ const TemplateMinimal = ({ portfolio }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {p.education.map((ed, i) => (
                   <div key={i}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 500, margin: '0 0 0.25rem', color: primaryColor }}>{ed.degree}</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 500, margin: '0 0 0.25rem', color: primaryColor }}>{ed.degree || ed.text}</h3>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#737373', fontSize: '0.95rem' }}>
                       <span>{ed.institution}</span>
-                      <span>{ed.year}</span>
+                      <span>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
                     </div>
                   </div>
                 ))}

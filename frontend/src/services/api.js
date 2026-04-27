@@ -27,3 +27,6 @@ export const deletePortfolio = (id) => API.delete(`/portfolio/${id}`);
 export const getFeedback = (portfolioId) => API.get(`/feedback/${portfolioId}`);
 export const submitFeedback = (portfolioId, data) => API.post(`/feedback/${portfolioId}`, data);
 
+// ─── Jobs ────────────────────────────────────────
+export const getJobs = (params) => API.get('/jobs', { params });
+

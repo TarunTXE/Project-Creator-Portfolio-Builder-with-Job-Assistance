@@ -1,6 +1,52 @@
 
-A full-stack web application designed to help users create professional and visually appealing portfolios using customizable templates. The platform allows users to easily build, edit, and personalize their portfolios to effectively showcase their skills, projects, and achievements.
+Portfolio Creator is a full-stack web application that helps users create professional portfolios using customizable templates. It includes portfolio sharing, PDF export, feedback and rating system, and job search features to support career growth.
 
-It features a built-in feedback system where visitors can rate and review portfolios, enabling users to gain valuable insights and improve their presentation. The application also supports shareable portfolio links for easy online access and PDF export functionality for convenient offline distribution.
+Tech Stack:
 
-Additionally, Portfolio Creator includes an integrated job portal that helps users explore relevant job opportunities, making it a complete platform for portfolio development, professional growth, and career advancement.
+Frontend-
+
+* React (Vite)
+* Tailwind CSS
+* React Router
+
+Backend-
+
+* Node.js
+* Express.js
+
+Database-
+
+* MongoDB
+
+Authentication-
+
+* JWT Authentication
+
+ API Used-
+
+* JSearch API (for job portal integration)
+
+## Features
+
+* User Registration & Login
+* Create and Edit Portfolio
+* Multiple Portfolio Templates
+* Portfolio Preview
+* Shareable Portfolio Link
+* Export Portfolio as PDF
+* Feedback and Rating System
+* Portfolio Evaluation
+* Job Portal Integration
+
+## Tools & Libraries
+
+* html2pdf / jsPDF
+* Axios
+* Mongoose
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies using `npm install`
+3. Configure environment variables
+4. Run frontend and backend servers

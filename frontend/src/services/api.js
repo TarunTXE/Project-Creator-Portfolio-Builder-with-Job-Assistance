@@ -19,6 +19,7 @@ export const loginUser = (data) => API.post('/auth/login', data);
 // ─── Portfolios ──────────────────────────────────
 export const getPortfolios = () => API.get('/portfolio');
 export const getPortfolioById = (id) => API.get(`/portfolio/${id}`);
+export const viewPortfolio = (id) => API.put(`/portfolio/${id}/view`);
 export const createPortfolio = (data) => API.post('/portfolio', data);
 export const updatePortfolio = (id, data) => API.put(`/portfolio/${id}`, data);
 export const deletePortfolio = (id) => API.delete(`/portfolio/${id}`);

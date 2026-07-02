@@ -11,6 +11,16 @@ const generateToken = (id) => {
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
+  // Validate email
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'Enter a valid email address' });
+  }
+
+  // Validate password
+  if (!password || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters and include uppercase, lowercase, number and special character' });
+  }
+
   try {
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -41,6 +51,11 @@ export const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+
+  // Validate email
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: 'Enter a valid email address' });
+  }
 
   try {
     const user = await User.findOne({ email });

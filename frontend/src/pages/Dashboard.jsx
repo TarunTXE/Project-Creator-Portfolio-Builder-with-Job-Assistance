@@ -159,6 +159,7 @@ const Dashboard = () => {
               <div className="flex gap-4 text-xs text-gray-500 mb-6">
                 <span>🛠 {portfolio.skills?.length || 0} skills</span>
                 <span>📂 {portfolio.projects?.length || 0} projects</span>
+                <span>👁️ {portfolio.views ?? 0} views</span>
               </div>
 
               <div className="mt-auto">

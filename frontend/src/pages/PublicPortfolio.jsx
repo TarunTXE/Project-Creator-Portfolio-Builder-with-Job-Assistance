@@ -21,7 +21,8 @@ const PublicPortfolio = () => {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const { data } = await api.getPortfolioById(id);
+        // Use viewPortfolio to increment view count on public access
+        const { data } = await api.viewPortfolio(id);
         setPortfolio(data);
       } catch (err) {
         setError('Portfolio not found');
@@ -130,22 +131,29 @@ const PublicPortfolio = () => {
       className="max-w-6xl mx-auto px-6 py-8 space-y-8"
     >
       {/* Action buttons */}
-      <div className="flex justify-end gap-3">
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          onClick={handleShare}
-          className="px-4 py-2 rounded-lg bg-[#1f2937] border border-gray-700 text-gray-300 hover:bg-gray-700 text-sm font-medium transition-all shadow-sm flex items-center gap-2"
-        >
-          🔗 Share
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          onClick={handleExportPDF}
-          disabled={exporting}
-          className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
-        >
-          {exporting ? '⏳ Exporting...' : '📄 Export PDF'}
-        </motion.button>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        {/* View count */}
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1f2937] border border-gray-700 text-gray-300 text-sm font-medium">
+          <span className="text-lg">👁️</span>
+          <span>{portfolio.views ?? 0} views</span>
+        </div>
+        <div className="flex gap-3">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={handleShare}
+            className="px-4 py-2 rounded-lg bg-[#1f2937] border border-gray-700 text-gray-300 hover:bg-gray-700 text-sm font-medium transition-all shadow-sm flex items-center gap-2"
+          >
+            🔗 Share
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={handleExportPDF}
+            disabled={exporting}
+            className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
+          >
+            {exporting ? '⏳ Exporting...' : '📄 Export PDF'}
+          </motion.button>
+        </div>
       </div>
 
       {/* Portfolio content (used as PDF target) */}

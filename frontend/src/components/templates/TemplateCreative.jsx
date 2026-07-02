@@ -4,8 +4,19 @@
 const TemplateCreative = ({ portfolio, theme }) => {
   const p = portfolio;
   const c = p.customizations || {};
-  const primaryColor = theme?.primary || c.primaryColor || '#ec4899'; // default pink
+  const primaryColor = theme?.primary || c.primaryColor || '#ec4899';
   const fontFamily = c.fontFamily || 'cursive, sans-serif';
+
+  const openPdf = (dataUrl) => {
+    try {
+      const parts = dataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const raw = atob(parts[1]);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      window.open(URL.createObjectURL(new Blob([arr], { type: mime })), '_blank');
+    } catch { window.open(dataUrl, '_blank'); }
+  };
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
 
@@ -100,6 +111,11 @@ const TemplateCreative = ({ portfolio, theme }) => {
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#111827' }}>{proj.title}</h3>
                     <p style={{ color: '#4b5563', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>{proj.description}</p>
                     {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
+                    {proj.pdfUrl && (
+                      <a href="#" onClick={(e) => { e.preventDefault(); openPdf(proj.pdfUrl); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', padding: '0.5rem 1.25rem', background: primaryColor, color: '#ffffff', borderRadius: '2rem', fontSize: '0.9rem', fontWeight: 700, textDecoration: 'none', boxShadow: '4px 4px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+                        📄 View PDF
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -119,7 +135,7 @@ const TemplateCreative = ({ portfolio, theme }) => {
                 <div key={i} style={{ borderLeft: `4px solid ${primaryColor}`, paddingLeft: '1.5rem', position: 'relative' }}>
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: primaryColor, position: 'absolute', left: '-8px', top: '5px' }}></div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem', color: '#111827' }}>{exp.title || exp.text}</h3>
-                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{exp.company} <span style={{ opacity: 0.5 }}>• {exp.years?.length > 0 ? exp.years.join(", ") : ""}</span></p>
+                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{exp.company} <span style={{ opacity: 0.5 }}>• {exp.startYear && exp.endYear ? `${exp.startYear} – ${exp.endYear}` : exp.startYear ? `${exp.startYear} – Present` : exp.years?.length > 0 ? exp.years.join(", ") : ""}</span></p>
                 </div>
               ))}
             </div>
@@ -138,7 +154,7 @@ const TemplateCreative = ({ portfolio, theme }) => {
                 <div key={i} style={{ borderLeft: `4px solid ${primaryColor}`, paddingLeft: '1.5rem', position: 'relative' }}>
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: primaryColor, position: 'absolute', left: '-8px', top: '5px' }}></div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem', color: '#111827' }}>{ed.degree || ed.text}</h3>
-                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{ed.institution} <span style={{ opacity: 0.5 }}>• {ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span></p>
+                  <p style={{ margin: 0, color: '#4b5563', fontSize: '1rem' }}>{ed.institution} <span style={{ opacity: 0.5 }}>• {ed.startYear && ed.endYear ? `${ed.startYear} – ${ed.endYear}` : ed.startYear ? `${ed.startYear} – Present` : ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span></p>
                 </div>
               ))}
             </div>

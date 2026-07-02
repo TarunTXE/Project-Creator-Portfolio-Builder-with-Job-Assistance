@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import * as api from '../services/api';
+import { openPdfInNewTab } from '../utils/pdfUtils';
 import TemplateModern from '../components/templates/TemplateModern';
 import TemplateMinimal from '../components/templates/TemplateMinimal';
 import TemplateCreative from '../components/templates/TemplateCreative';
@@ -10,6 +11,15 @@ import TemplateDeveloper from '../components/templates/TemplateDeveloper';
 import TemplateHeroProfile from '../components/templates/TemplateHeroProfile';
 import TemplateSplitCreative from '../components/templates/TemplateSplitCreative';
 import TemplateTimeline from '../components/templates/TemplateTimeline';
+
+const PREDEFINED_SKILLS = [
+  'React', 'Node.js', 'HTML', 'CSS', 'JavaScript',
+  'MongoDB', 'Express', 'Tailwind CSS',
+];
+
+// Generate year options dynamically (2000 → current year)
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1999 }, (_, i) => (2000 + i).toString());
 
 const emptyData = {
   title: '',
@@ -42,10 +52,18 @@ const Builder = () => {
   const location = useLocation();
   
   const [data, setData] = useState(emptyData);
-  const [newSkill, setNewSkill] = useState('');
+  const [selectedSkill, setSelectedSkill] = useState('');
+  const [customSkill, setCustomSkill] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [tab, setTab] = useState('info'); // info | design | skills | projects | education | preview
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [educationYearErrors, setEducationYearErrors] = useState({});
+  const [experienceYearErrors, setExperienceYearErrors] = useState({});
+  const [pdfErrors, setPdfErrors] = useState({});
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
@@ -107,15 +125,32 @@ const Builder = () => {
   };
 
   // Skills
-  const addSkill = () => {
-    if (!newSkill.trim()) return;
-    update('skills', [...data.skills, { name: newSkill.trim() }]);
-    setNewSkill('');
+  const handleSkillSelect = (value) => {
+    if (value === 'Other') {
+      setShowCustomInput(true);
+      setSelectedSkill('');
+      return;
+    }
+    if (!value) return;
+    const isDuplicate = data.skills.some(s => s.name.toLowerCase() === value.toLowerCase());
+    if (isDuplicate) return;
+    update('skills', [...data.skills, { name: value }]);
+    setSelectedSkill('');
   };
+
+  const addCustomSkill = () => {
+    if (!customSkill.trim()) return;
+    const isDuplicate = data.skills.some(s => s.name.toLowerCase() === customSkill.trim().toLowerCase());
+    if (isDuplicate) { setCustomSkill(''); return; }
+    update('skills', [...data.skills, { name: customSkill.trim() }]);
+    setCustomSkill('');
+    setShowCustomInput(false);
+  };
+
   const removeSkill = (i) => update('skills', data.skills.filter((_, idx) => idx !== i));
 
   // Projects
-  const addProject = () => update('projects', [...data.projects, { title: '', description: '', imageUrl: '' }]);
+  const addProject = () => update('projects', [...data.projects, { title: '', description: '', imageUrl: '', pdfUrl: '' }]);
   const updateProject = (i, field, value) => {
     const updated = [...data.projects];
     updated[i] = { ...updated[i], [field]: value };
@@ -131,8 +166,23 @@ const Builder = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleProjectPdf = (e, i) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Validate PDF only
+    if (file.type !== 'application/pdf') {
+      setPdfErrors(prev => ({ ...prev, [i]: 'Only PDF files are allowed' }));
+      e.target.value = '';
+      return;
+    }
+    setPdfErrors(prev => { const n = { ...prev }; delete n[i]; return n; });
+    const reader = new FileReader();
+    reader.onloadend = () => updateProject(i, 'pdfUrl', reader.result);
+    reader.readAsDataURL(file);
+  };
+
   // Education
-  const addEducation = () => update('education', [...data.education, { degree: '', institution: '', year: '' }]);
+  const addEducation = () => update('education', [...data.education, { degree: '', institution: '', year: '', startYear: '', endYear: '' }]);
   const updateEducation = (i, field, value) => {
     const updated = [...data.education];
     updated[i] = { ...updated[i], [field]: value };
@@ -141,7 +191,7 @@ const Builder = () => {
   const removeEducation = (i) => update('education', data.education.filter((_, idx) => idx !== i));
 
   // Experience
-  const addExperience = () => update('experience', [...data.experience, { title: '', company: '', description: '' }]);
+  const addExperience = () => update('experience', [...data.experience, { title: '', company: '', description: '', startYear: '', endYear: '' }]);
   const updateExperience = (i, field, value) => {
     const updated = [...data.experience];
     updated[i] = { ...updated[i], [field]: value };
@@ -149,10 +199,96 @@ const Builder = () => {
   };
   const removeExperience = (i) => update('experience', data.experience.filter((_, idx) => idx !== i));
 
+  // Phone handler — digits only, validate on blur
+  const handlePhoneChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+    update('contactPhone', digits);
+    if (phoneError) setPhoneError('');
+  };
+
+  const handlePhoneBlur = () => {
+    const val = data.contactPhone;
+    if (!val) {
+      setPhoneError('Contact number is required');
+    } else if (!/^\d{10}$/.test(val)) {
+      setPhoneError('Contact number must be exactly 10 digits');
+    } else {
+      setPhoneError('');
+    }
+  };
+
+  // Email handler — validate on blur
+  const handleEmailChange = (e) => {
+    update('contactEmail', e.target.value);
+    if (emailError) setEmailError('');
+  };
+
+  const handleEmailBlur = () => {
+    const val = data.contactEmail;
+    if (!val || !val.trim()) {
+      setEmailError('Email is required');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      setEmailError('Enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
+
   // Save
   const handleSave = async () => {
+    let hasError = false;
+
+    // Validate email (mandatory)
+    if (!data.contactEmail || !data.contactEmail.trim()) {
+      setEmailError('Email is required');
+      hasError = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contactEmail)) {
+      setEmailError('Enter a valid email address');
+      hasError = true;
+    } else {
+      setEmailError('');
+    }
+
+    // Validate phone (mandatory)
+    if (!data.contactPhone) {
+      setPhoneError('Contact number is required');
+      hasError = true;
+    } else if (!/^\d{10}$/.test(data.contactPhone)) {
+      setPhoneError('Contact number must be exactly 10 digits');
+      hasError = true;
+    } else {
+      setPhoneError('');
+    }
+
+    // Validate education year ranges
+    const eduErrors = {};
+    data.education.forEach((edu, i) => {
+      if (edu.startYear && edu.endYear && parseInt(edu.startYear) > parseInt(edu.endYear)) {
+        eduErrors[i] = 'End year must be ≥ start year';
+        hasError = true;
+      }
+    });
+    setEducationYearErrors(eduErrors);
+
+    // Validate experience year ranges
+    const expErrors = {};
+    data.experience.forEach((exp, i) => {
+      if (exp.startYear && exp.endYear && parseInt(exp.startYear) > parseInt(exp.endYear)) {
+        expErrors[i] = 'End year must be ≥ start year';
+        hasError = true;
+      }
+    });
+    setExperienceYearErrors(expErrors);
+
+    if (hasError) {
+      setError('Please fix the highlighted errors before saving');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     setSaving(true);
     setMessage('');
+    setError('');
     
     // Ensure correct payload is sent to backend
     const payload = {
@@ -181,10 +317,10 @@ const Builder = () => {
       }
     } catch (err) {
       console.error('Save Error:', err.response?.data || err.message);
-      setMessage(err.response?.data?.message || 'Error saving');
+      setError(err.response?.data?.message || 'Error saving');
     } finally {
       setSaving(false);
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => { setMessage(''); setError(''); }, 3000);
     }
   };
 
@@ -203,12 +339,29 @@ const Builder = () => {
         <textarea className={inputClass + ' min-h-[100px]'} placeholder="Tell the world about yourself..." value={data.bio} onChange={(e) => update('bio', e.target.value)} />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Contact Email</label>
-        <input className={inputClass} type="email" placeholder="you@example.com" value={data.contactEmail} onChange={(e) => update('contactEmail', e.target.value)} />
+        <label className="block text-sm font-medium text-gray-300 mb-1">Contact Email <span className="text-red-400">*</span></label>
+        <input
+          className={inputClass + (emailError ? ' border-red-500 focus:ring-red-500' : '')}
+          type="text"
+          placeholder="you@example.com"
+          value={data.contactEmail}
+          onChange={handleEmailChange}
+          onBlur={handleEmailBlur}
+        />
+        {emailError && <p className="text-red-400 text-xs mt-1">{emailError}</p>}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Contact Phone</label>
-        <input className={inputClass} type="tel" placeholder="+1 234 567 890" value={data.contactPhone || ''} onChange={(e) => update('contactPhone', e.target.value)} />
+        <label className="block text-sm font-medium text-gray-300 mb-1">Contact Phone <span className="text-red-400">*</span></label>
+        <input
+          className={inputClass + (phoneError ? ' border-red-500 focus:ring-red-500' : '')}
+          type="tel"
+          placeholder="1234567890"
+          maxLength={10}
+          value={data.contactPhone || ''}
+          onChange={handlePhoneChange}
+          onBlur={handlePhoneBlur}
+        />
+        {phoneError && <p className="text-red-400 text-xs mt-1">{phoneError}</p>}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-1">GitHub Link</label>
@@ -323,23 +476,67 @@ const Builder = () => {
     </div>
   );
 
-  const renderSkills = () => (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <input className={inputClass} placeholder="e.g. React, Node.js…" value={newSkill} onChange={(e) => setNewSkill(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addSkill()} />
-        <button onClick={addSkill} className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all shadow-sm whitespace-nowrap">Add</button>
+  const renderSkills = () => {
+    const availableSkills = PREDEFINED_SKILLS.filter(
+      skill => !data.skills.some(s => s.name.toLowerCase() === skill.toLowerCase())
+    );
+
+    return (
+      <div className="space-y-5">
+        {/* Dropdown */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Select a Skill</label>
+          <select
+            className={inputClass}
+            value={selectedSkill}
+            onChange={(e) => handleSkillSelect(e.target.value)}
+          >
+            <option value="">— Choose a skill —</option>
+            {availableSkills.map(skill => (
+              <option key={skill} value={skill}>{skill}</option>
+            ))}
+            <option value="Other">Other (custom)</option>
+          </select>
+        </div>
+
+        {/* Custom skill input */}
+        {showCustomInput && (
+          <div className="flex gap-2">
+            <input
+              className={inputClass}
+              placeholder="Enter custom skill"
+              value={customSkill}
+              onChange={(e) => setCustomSkill(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addCustomSkill()}
+            />
+            <button
+              onClick={addCustomSkill}
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-all shadow-sm whitespace-nowrap"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => { setShowCustomInput(false); setCustomSkill(''); }}
+              className="px-3 py-2 rounded-lg bg-gray-700 text-gray-300 font-medium hover:bg-gray-600 transition-all shadow-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* Selected skills chips */}
+        <div className="flex flex-wrap gap-2">
+          {data.skills.map((s, i) => (
+            <span key={i} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1f2937] text-gray-300 text-sm border border-gray-700">
+              {s.name}
+              <button onClick={() => removeSkill(i)} className="ml-1 text-gray-500 hover:text-red-400 transition-colors">✕</button>
+            </span>
+          ))}
+        </div>
+        {data.skills.length === 0 && <p className="text-gray-400 text-sm text-center py-8">No skills added yet. Select from the dropdown above!</p>}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {data.skills.map((s, i) => (
-          <span key={i} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1f2937] text-gray-300 text-sm border border-gray-700">
-            {s.name}
-            <button onClick={() => removeSkill(i)} className="ml-1 text-gray-500 hover:text-red-400 transition-colors">✕</button>
-          </span>
-        ))}
-      </div>
-      {data.skills.length === 0 && <p className="text-gray-400 text-sm text-center py-8">No skills added yet. Start typing above!</p>}
-    </div>
-  );
+    );
+  };
 
   const renderProjects = () => (
     <div className="space-y-6">
@@ -351,8 +548,46 @@ const Builder = () => {
           </div>
           <input className={inputClass} placeholder="Project Title" value={p.title} onChange={(e) => updateProject(i, 'title', e.target.value)} />
           <textarea className={inputClass + ' min-h-[80px]'} placeholder="Description" value={p.description} onChange={(e) => updateProject(i, 'description', e.target.value)} />
-          <input type="file" accept="image/*" onChange={(e) => handleProjectImage(e, i)} className="text-gray-400 text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#111827] file:text-gray-300 file:cursor-pointer hover:file:bg-gray-700 transition-all" />
-          {p.imageUrl && <img src={p.imageUrl} alt="project" className="mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-700" />}
+          
+          {/* Project Image */}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">🖼️ Project Image</label>
+            <input type="file" accept="image/*" onChange={(e) => handleProjectImage(e, i)} className="text-gray-400 text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#111827] file:text-gray-300 file:cursor-pointer hover:file:bg-gray-700 transition-all" />
+            {p.imageUrl && <img src={p.imageUrl} alt="project" className="mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-700" />}
+          </div>
+
+          {/* Project PDF */}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">📄 Project PDF</label>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => handleProjectPdf(e, i)}
+              className="text-gray-400 text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#111827] file:text-gray-300 file:cursor-pointer hover:file:bg-gray-700 transition-all"
+            />
+            {pdfErrors[i] && <p className="text-red-400 text-xs mt-1">{pdfErrors[i]}</p>}
+            {p.pdfUrl && (
+              <div className="mt-2 flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#111827] text-gray-300 text-xs border border-gray-700">
+                  📄 PDF uploaded
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openPdfInNewTab(p.pdfUrl)}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 border border-indigo-500/30 text-xs font-medium transition-colors"
+                >
+                  Preview PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateProject(i, 'pdfUrl', '')}
+                  className="px-2 py-1.5 rounded-lg text-red-400 hover:text-red-500 hover:bg-red-900/20 text-xs font-medium transition-colors"
+                >
+                  ✕ Remove
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       ))}
       <button onClick={addProject} className="w-full py-4 rounded-xl border-2 border-dashed border-gray-700 text-gray-400 hover:border-indigo-500 hover:text-indigo-400 transition-all font-medium bg-[#111827] hover:bg-[#1f2937]">
@@ -372,6 +607,42 @@ const Builder = () => {
           <input className={inputClass} placeholder="Degree / Course" value={e.degree} onChange={(ev) => updateEducation(i, 'degree', ev.target.value)} />
           <input className={inputClass} placeholder="Institution" value={e.institution} onChange={(ev) => updateEducation(i, 'institution', ev.target.value)} />
           <input className={inputClass} placeholder="Year (e.g. 2020 – 2024)" value={e.year} onChange={(ev) => updateEducation(i, 'year', ev.target.value)} />
+
+          {/* Education Duration — Year Pickers */}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-2">📅 Education Duration</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] text-gray-500 mb-1">Start Year</label>
+                <select
+                  className={inputClass + (educationYearErrors[i] ? ' border-red-500 focus:ring-red-500' : '')}
+                  value={e.startYear || ''}
+                  onChange={(ev) => {
+                    updateEducation(i, 'startYear', ev.target.value);
+                    setEducationYearErrors(prev => { const n = { ...prev }; delete n[i]; return n; });
+                  }}
+                >
+                  <option value="">— Select —</option>
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] text-gray-500 mb-1">End Year</label>
+                <select
+                  className={inputClass + (educationYearErrors[i] ? ' border-red-500 focus:ring-red-500' : '')}
+                  value={e.endYear || ''}
+                  onChange={(ev) => {
+                    updateEducation(i, 'endYear', ev.target.value);
+                    setEducationYearErrors(prev => { const n = { ...prev }; delete n[i]; return n; });
+                  }}
+                >
+                  <option value="">— Select —</option>
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+            {educationYearErrors[i] && <p className="text-red-400 text-xs mt-1">{educationYearErrors[i]}</p>}
+          </div>
         </div>
       ))}
       <button onClick={addEducation} className="w-full py-4 rounded-xl border-2 border-dashed border-gray-700 text-gray-400 hover:border-indigo-500 hover:text-indigo-400 transition-all font-medium bg-[#111827] hover:bg-[#1f2937]">
@@ -391,6 +662,42 @@ const Builder = () => {
           <input className={inputClass} placeholder="Job Title" value={e.title} onChange={(ev) => updateExperience(i, 'title', ev.target.value)} />
           <input className={inputClass} placeholder="Company" value={e.company} onChange={(ev) => updateExperience(i, 'company', ev.target.value)} />
           <textarea className={inputClass + ' min-h-[80px]'} placeholder="Description" value={e.description} onChange={(ev) => updateExperience(i, 'description', ev.target.value)} />
+
+          {/* Experience Duration — Year Pickers */}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-2">📅 Experience (Years)</label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] text-gray-500 mb-1">Start Year</label>
+                <select
+                  className={inputClass + (experienceYearErrors[i] ? ' border-red-500 focus:ring-red-500' : '')}
+                  value={e.startYear || ''}
+                  onChange={(ev) => {
+                    updateExperience(i, 'startYear', ev.target.value);
+                    setExperienceYearErrors(prev => { const n = { ...prev }; delete n[i]; return n; });
+                  }}
+                >
+                  <option value="">— Select —</option>
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] text-gray-500 mb-1">End Year</label>
+                <select
+                  className={inputClass + (experienceYearErrors[i] ? ' border-red-500 focus:ring-red-500' : '')}
+                  value={e.endYear || ''}
+                  onChange={(ev) => {
+                    updateExperience(i, 'endYear', ev.target.value);
+                    setExperienceYearErrors(prev => { const n = { ...prev }; delete n[i]; return n; });
+                  }}
+                >
+                  <option value="">— Select —</option>
+                  {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+            {experienceYearErrors[i] && <p className="text-red-400 text-xs mt-1">{experienceYearErrors[i]}</p>}
+          </div>
         </div>
       ))}
       <button onClick={addExperience} className="w-full py-4 rounded-xl border-2 border-dashed border-gray-700 text-gray-400 hover:border-indigo-500 hover:text-indigo-400 transition-all font-medium bg-[#111827] hover:bg-[#1f2937]">
@@ -463,7 +770,11 @@ const Builder = () => {
 
       {/* Save bar */}
       <div className="flex items-center justify-between bg-[#111827] px-6 py-4 border border-gray-800 rounded-xl shadow-sm sticky bottom-6 z-40">
-        {message ? (
+        {error ? (
+          <p className="text-sm font-medium text-red-400 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> {error}
+          </p>
+        ) : message ? (
           <p className="text-sm font-medium text-green-400 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> {message}
           </p>

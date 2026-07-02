@@ -8,6 +8,17 @@ const TemplateSplitCreative = ({ portfolio, theme }) => {
   const primaryColor = theme?.primary || c.primaryColor || '#7c3aed';
   const fontFamily = c.fontFamily || 'sans-serif';
 
+  const openPdf = (dataUrl) => {
+    try {
+      const parts = dataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const raw = atob(parts[1]);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      window.open(URL.createObjectURL(new Blob([arr], { type: mime })), '_blank');
+    } catch { window.open(dataUrl, '_blank'); }
+  };
+
   const containerStyle = {
     fontFamily,
     display: 'flex',
@@ -145,7 +156,21 @@ const TemplateSplitCreative = ({ portfolio, theme }) => {
               <div key={i} style={{ marginBottom: '1rem', paddingLeft: '1rem', borderLeft: '3px solid rgba(255,255,255,0.3)' }}>
                 <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 0.2rem' }}>{ed.degree || ed.text}</h4>
                 <p style={{ fontSize: '0.85rem', margin: 0, color: 'rgba(255,255,255,0.7)' }}>{ed.institution}</p>
-                <p style={{ fontSize: '0.8rem', margin: '0.2rem 0 0', color: 'rgba(255,255,255,0.5)' }}>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</p>
+                <p style={{ fontSize: '0.8rem', margin: '0.2rem 0 0', color: 'rgba(255,255,255,0.5)' }}>{ed.startYear && ed.endYear ? `${ed.startYear} – ${ed.endYear}` : ed.startYear ? `${ed.startYear} – Present` : ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Experience in sidebar */}
+        {c.showExperience !== false && p.experience?.length > 0 && (
+          <div style={{ position: 'relative', zIndex: 1, marginTop: '2rem' }}>
+            <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.6)', marginBottom: '0.75rem', fontWeight: 600 }}>Experience</h3>
+            {p.experience.map((exp, i) => (
+              <div key={i} style={{ marginBottom: '1rem', paddingLeft: '1rem', borderLeft: '3px solid rgba(255,255,255,0.3)' }}>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 0.2rem' }}>{exp.title || exp.text}</h4>
+                <p style={{ fontSize: '0.85rem', margin: 0, color: 'rgba(255,255,255,0.7)' }}>{exp.company}</p>
+                <p style={{ fontSize: '0.8rem', margin: '0.2rem 0 0', color: 'rgba(255,255,255,0.5)' }}>{exp.startYear && exp.endYear ? `${exp.startYear} – ${exp.endYear}` : exp.startYear ? `${exp.startYear} – Present` : exp.years?.length > 0 ? exp.years.join(", ") : ""}</p>
               </div>
             ))}
           </div>
@@ -188,10 +213,15 @@ const TemplateSplitCreative = ({ portfolio, theme }) => {
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>{proj.title}</h3>
                     <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>{proj.description}</p>
                     {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
-                    <div style={{ marginTop: '0.75rem' }}>
+                    <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <span style={{ padding: '0.25rem 0.75rem', background: `${primaryColor}15`, color: primaryColor, borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600 }}>
                         View Project →
                       </span>
+                      {proj.pdfUrl && (
+                        <a href="#" onClick={(e) => { e.preventDefault(); openPdf(proj.pdfUrl); }} style={{ padding: '0.25rem 0.75rem', background: `${primaryColor}15`, color: primaryColor, borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, textDecoration: 'none', border: `1px solid ${primaryColor}25`, cursor: 'pointer' }}>
+                          📄 View PDF
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -4,8 +4,19 @@
 const TemplateMinimal = ({ portfolio, theme }) => {
   const p = portfolio;
   const c = p.customizations || {};
-  const primaryColor = theme?.primary || c.primaryColor || '#475569'; // default slate
+  const primaryColor = theme?.primary || c.primaryColor || '#475569';
   const fontFamily = c.fontFamily || 'serif';
+
+  const openPdf = (dataUrl) => {
+    try {
+      const parts = dataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const raw = atob(parts[1]);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      window.open(URL.createObjectURL(new Blob([arr], { type: mime })), '_blank');
+    } catch { window.open(dataUrl, '_blank'); }
+  };
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
 
@@ -67,6 +78,11 @@ const TemplateMinimal = ({ portfolio, theme }) => {
                       <h3 style={{ fontSize: '1.5rem', fontWeight: 400, margin: '0 0 0.5rem', color: primaryColor }}>{proj.title}</h3>
                       <p style={{ color: '#525252', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>{proj.description}</p>
                     {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
+                    {proj.pdfUrl && (
+                      <a href="#" onClick={(e) => { e.preventDefault(); openPdf(proj.pdfUrl); }} style={{ display: 'inline-block', marginTop: '0.75rem', color: primaryColor, fontSize: '0.9rem', fontWeight: 500, textDecoration: 'underline', cursor: 'pointer' }}>
+                        📄 View PDF
+                      </a>
+                    )}
                     </div>
                   </div>
                 ))}
@@ -99,7 +115,7 @@ const TemplateMinimal = ({ portfolio, theme }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#737373', fontSize: '0.95rem' }}>
                       <span>{exp.company}</span>
                     {exp.description && <div style={{ marginTop: "0.5rem", fontSize: "0.95em", opacity: 0.85, whiteSpace: "pre-wrap" }}>{exp.description}</div>}
-                      <span>{exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
+                      <span>{exp.startYear && exp.endYear ? `${exp.startYear} – ${exp.endYear}` : exp.startYear ? `${exp.startYear} – Present` : exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
                       {exp.description && <p style={{ fontSize: "0.9em", marginTop: "0.5rem", opacity: 0.9 }}>{exp.description}</p>}
                 </div>
                   </div>
@@ -118,7 +134,7 @@ const TemplateMinimal = ({ portfolio, theme }) => {
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 500, margin: '0 0 0.25rem', color: primaryColor }}>{ed.degree || ed.text}</h3>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#737373', fontSize: '0.95rem' }}>
                       <span>{ed.institution}</span>
-                      <span>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
+                      <span>{ed.startYear && ed.endYear ? `${ed.startYear} – ${ed.endYear}` : ed.startYear ? `${ed.startYear} – Present` : ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
                     </div>
                   </div>
                 ))}

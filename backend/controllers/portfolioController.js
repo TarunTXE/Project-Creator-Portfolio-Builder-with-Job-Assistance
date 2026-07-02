@@ -3,6 +3,16 @@ import Portfolio from '../models/Portfolio.js';
 // @desc    Create a new portfolio
 // @route   POST /api/portfolio
 export const createPortfolio = async (req, res) => {
+  // Validate email (mandatory)
+  if (!req.body.contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.contactEmail)) {
+    return res.status(400).json({ message: 'Enter a valid email address' });
+  }
+
+  // Validate phone (mandatory)
+  if (!req.body.contactPhone || !/^\d{10}$/.test(req.body.contactPhone)) {
+    return res.status(400).json({ message: 'Contact number must be exactly 10 digits' });
+  }
+
   try {
     const portfolio = new Portfolio({
       user: req.user._id,
@@ -43,9 +53,39 @@ export const getPortfolioById = async (req, res) => {
   }
 };
 
+// @desc    View a portfolio publicly and increment view count
+// @route   PUT /api/portfolio/:id/view
+export const viewPortfolioPublic = async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate('user', 'name email');
+
+    if (portfolio) {
+      res.json(portfolio);
+    } else {
+      res.status(404).json({ message: 'Portfolio not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Update a portfolio
 // @route   PUT /api/portfolio/:id
 export const updatePortfolio = async (req, res) => {
+  // Validate email (mandatory)
+  if (!req.body.contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.contactEmail)) {
+    return res.status(400).json({ message: 'Enter a valid email address' });
+  }
+
+  // Validate phone (mandatory)
+  if (!req.body.contactPhone || !/^\d{10}$/.test(req.body.contactPhone)) {
+    return res.status(400).json({ message: 'Contact number must be exactly 10 digits' });
+  }
+
   try {
     const portfolio = await Portfolio.findById(req.params.id);
 

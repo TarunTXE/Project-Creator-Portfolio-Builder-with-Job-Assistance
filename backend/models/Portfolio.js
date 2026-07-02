@@ -4,6 +4,7 @@ const projectSchema = mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   imageUrl: { type: String, required: false }, // Base64 or local path
+  pdfUrl: { type: String, required: false }, // Base64 data URL for project PDF
 });
 
 const skillSchema = mongoose.Schema({
@@ -14,6 +15,8 @@ const educationSchema = mongoose.Schema({
   degree: { type: String, required: true },
   institution: { type: String, required: true },
   year: { type: String, required: true },
+  startYear: { type: String, required: false },
+  endYear: { type: String, required: false },
 });
 
 const portfolioSchema = mongoose.Schema(
@@ -59,7 +62,13 @@ const portfolioSchema = mongoose.Schema(
       title: { type: String, required: true },
       company: { type: String, required: true },
       description: { type: String, required: false },
+      startYear: { type: String, required: false },
+      endYear: { type: String, required: false },
     }],
+    views: {
+      type: Number,
+      default: 0,
+    },
     customizations: {
       primaryColor: { type: String, default: '#3b82f6' },
       fontFamily: { type: String, default: 'sans-serif' },

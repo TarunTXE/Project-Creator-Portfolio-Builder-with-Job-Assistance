@@ -8,6 +8,17 @@ const TemplateHeroProfile = ({ portfolio, theme }) => {
   const primaryColor = theme?.primary || c.primaryColor || '#f59e0b';
   const fontFamily = c.fontFamily || 'sans-serif';
 
+  const openPdf = (dataUrl) => {
+    try {
+      const parts = dataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const raw = atob(parts[1]);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      window.open(URL.createObjectURL(new Blob([arr], { type: mime })), '_blank');
+    } catch { window.open(dataUrl, '_blank'); }
+  };
+
   const containerStyle = {
     fontFamily,
     background: '#ffffff',
@@ -196,6 +207,11 @@ const TemplateHeroProfile = ({ portfolio, theme }) => {
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: '0 0 0.5rem' }}>{proj.title}</h3>
                     <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>{proj.description}</p>
                     {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
+                    {proj.pdfUrl && (
+                      <a href="#" onClick={(e) => { e.preventDefault(); openPdf(proj.pdfUrl); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', padding: '0.4rem 1rem', background: primaryColor, color: '#ffffff', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 600, textDecoration: 'none', cursor: 'pointer' }}>
+                        📄 View PDF
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -233,7 +249,45 @@ const TemplateHeroProfile = ({ portfolio, theme }) => {
                     fontSize: '0.8rem', 
                     fontWeight: 700,
                     whiteSpace: 'nowrap',
-                  }}>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
+                  }}>{ed.startYear && ed.endYear ? `${ed.startYear} – ${ed.endYear}` : ed.startYear ? `${ed.startYear} – Present` : ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Experience */}
+        {c.showExperience !== false && p.experience?.length > 0 && (
+          <section style={{ marginBottom: '2.5rem' }}>
+            <div style={sectionTitleStyle}>
+              <div style={accentBar}></div>
+              Experience
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {p.experience.map((exp, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#f8fafc',
+                  borderRadius: '0.75rem',
+                  padding: '1.25rem 1.5rem',
+                  border: '1px solid #e2e8f0',
+                }}>
+                  <div>
+                    <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.05rem' }}>{exp.title || exp.text}</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>{exp.company}</p>
+                    {exp.description && <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0.25rem 0 0', whiteSpace: 'pre-wrap' }}>{exp.description}</p>}
+                  </div>
+                  <span style={{ 
+                    color: '#ffffff', 
+                    background: primaryColor, 
+                    padding: '0.3rem 1rem', 
+                    borderRadius: '9999px', 
+                    fontSize: '0.8rem', 
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                  }}>{exp.startYear && exp.endYear ? `${exp.startYear} – ${exp.endYear}` : exp.startYear ? `${exp.startYear} – Present` : exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
                 </div>
               ))}
             </div>

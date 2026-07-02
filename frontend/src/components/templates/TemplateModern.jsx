@@ -7,6 +7,18 @@ const TemplateModern = ({ portfolio, theme }) => {
   const c = p.customizations || {};
   const primaryColor = theme?.primary || c.primaryColor || '#3b82f6';
   const fontFamily = c.fontFamily || 'sans-serif';
+
+  // Convert base64 data URL to Blob URL for PDF viewing
+  const openPdf = (dataUrl) => {
+    try {
+      const parts = dataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const raw = atob(parts[1]);
+      const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      window.open(URL.createObjectURL(new Blob([arr], { type: mime })), '_blank');
+    } catch { window.open(dataUrl, '_blank'); }
+  };
   const isSidebar = c.layout === 'left';
   const isSidebarRight = c.layout === 'right';
 
@@ -90,6 +102,11 @@ const TemplateModern = ({ portfolio, theme }) => {
                     <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.1rem' }}>{proj.title}</h3>
                     <p style={{ color: '#475569', fontSize: '0.9rem', marginTop: '0.5rem', lineHeight: 1.5 }}>{proj.description}</p>
                     {proj.years?.length > 0 && <span style={{ fontSize: "0.85em", opacity: 0.8, marginTop: "0.5rem", display: "block" }}>{proj.years.join(", ")}</span>}
+                    {proj.pdfUrl && (
+                      <a href="#" onClick={(e) => { e.preventDefault(); openPdf(proj.pdfUrl); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.75rem', padding: '0.4rem 1rem', background: `${primaryColor}15`, color: primaryColor, borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', border: `1px solid ${primaryColor}30`, cursor: 'pointer' }}>
+                        📄 View PDF
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -109,7 +126,7 @@ const TemplateModern = ({ portfolio, theme }) => {
                     <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>{exp.company}</p>
                     {exp.description && <div style={{ marginTop: "0.5rem", fontSize: "0.95em", opacity: 0.85, whiteSpace: "pre-wrap" }}>{exp.description}</div>}
                   </div>
-                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
+                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{exp.startYear && exp.endYear ? `${exp.startYear} – ${exp.endYear}` : exp.startYear ? `${exp.startYear} – Present` : exp.years?.length > 0 ? exp.years.join(", ") : ""}</span>
                 </div>
               ))}
             </div>
@@ -127,7 +144,7 @@ const TemplateModern = ({ portfolio, theme }) => {
                     <h3 style={{ fontWeight: 700, color: '#0f172a', margin: 0, fontSize: '1.1rem' }}>{ed.degree || ed.text}</h3>
                     <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>{ed.institution}</p>
                   </div>
-                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
+                  <span style={{ color: primaryColor, backgroundColor: `${primaryColor}1a`, padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700 }}>{ed.startYear && ed.endYear ? `${ed.startYear} – ${ed.endYear}` : ed.startYear ? `${ed.startYear} – Present` : ed.years?.length > 0 ? ed.years.join(", ") : ed.year}</span>
                 </div>
               ))}
             </div>

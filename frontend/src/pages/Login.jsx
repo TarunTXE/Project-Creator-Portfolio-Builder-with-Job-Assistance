@@ -8,14 +8,38 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validate = () => {
+    const errors = {};
+
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Enter a valid email address';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)) {
+      errors.password = 'Password must be at least 8 characters and include uppercase, lowercase, number and special character';
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setLoading(true);
     try {
       const { data } = await api.loginUser({ email, password });
       login(data);
@@ -26,6 +50,10 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const inputBase = 'w-full bg-[#1f2937] border rounded-lg px-3 py-2 focus:ring-2 focus:outline-none transition-all text-white placeholder-gray-500';
+  const inputNormal = inputBase + ' border-gray-700 focus:ring-indigo-500';
+  const inputError = inputBase + ' border-red-500 focus:ring-red-500';
 
   return (
     <motion.div 
@@ -48,13 +76,13 @@ const Login = () => {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
             <input
-              type="email"
+              type="text"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-white placeholder-gray-500"
+              onChange={(e) => { setEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: '' })); }}
+              className={fieldErrors.email ? inputError : inputNormal}
               placeholder="you@example.com"
             />
+            {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div>
@@ -62,11 +90,11 @@ const Login = () => {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-white placeholder-gray-500"
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => ({ ...prev, password: '' })); }}
+              className={fieldErrors.password ? inputError : inputNormal}
               placeholder="••••••••"
             />
+            {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
           </div>
 
           <motion.button

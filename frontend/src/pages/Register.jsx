@@ -10,17 +10,42 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validate = () => {
+    const errors = {};
+
+    if (!email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Enter a valid email address';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password)) {
+      errors.password = 'Password must be at least 8 characters and include uppercase, lowercase, number and special character';
+    }
+
+    if (password && password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      return setError('Passwords do not match');
-    }
-    setLoading(true);
     setError('');
+
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setLoading(true);
     try {
       const { data } = await api.registerUser({ name, email, password });
       login(data);
@@ -31,6 +56,12 @@ const Register = () => {
       setLoading(false);
     }
   };
+
+  const clearFieldError = (field) => setFieldErrors(prev => ({ ...prev, [field]: '' }));
+
+  const inputBase = 'w-full bg-[#1f2937] border rounded-lg px-3 py-2 focus:ring-2 focus:outline-none transition-all text-white placeholder-gray-500';
+  const inputNormal = inputBase + ' border-gray-700 focus:ring-indigo-500';
+  const inputError = inputBase + ' border-red-500 focus:ring-red-500';
 
   return (
     <motion.div 
@@ -57,7 +88,7 @@ const Register = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-white placeholder-gray-500"
+              className={inputNormal}
               placeholder="John Doe"
             />
           </div>
@@ -65,13 +96,13 @@ const Register = () => {
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
             <input
-              type="email"
+              type="text"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-white placeholder-gray-500"
+              onChange={(e) => { setEmail(e.target.value); clearFieldError('email'); }}
+              className={fieldErrors.email ? inputError : inputNormal}
               placeholder="you@example.com"
             />
+            {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div>
@@ -79,11 +110,11 @@ const Register = () => {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-white placeholder-gray-500"
+              onChange={(e) => { setPassword(e.target.value); clearFieldError('password'); }}
+              className={fieldErrors.password ? inputError : inputNormal}
               placeholder="••••••••"
             />
+            {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
           </div>
 
           <div>
@@ -91,11 +122,11 @@ const Register = () => {
             <input
               type="password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full bg-[#1f2937] border border-gray-700 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all text-white placeholder-gray-500"
+              onChange={(e) => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword'); }}
+              className={fieldErrors.confirmPassword ? inputError : inputNormal}
               placeholder="••••••••"
             />
+            {fieldErrors.confirmPassword && <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
           </div>
 
           <motion.button

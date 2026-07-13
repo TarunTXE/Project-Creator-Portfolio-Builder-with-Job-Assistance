@@ -40,7 +40,7 @@ Authentication-
 
 ## Tools & Libraries
 
-* html2pdf / jsPDF
+* html2pdf
 * Axios
 * Mongoose
 
